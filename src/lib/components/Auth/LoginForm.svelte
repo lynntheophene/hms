@@ -63,6 +63,7 @@
             type="email"
             bind:value={email}
             placeholder="Enter your email"
+            autocomplete="email"
             required
             disabled={loading}
           />
@@ -81,6 +82,7 @@
               type="text"
               bind:value={password}
               placeholder="Enter your password"
+              autocomplete="current-password"
               required
               disabled={loading}
             />
@@ -90,6 +92,7 @@
               type="password"
               bind:value={password}
               placeholder="Enter your password"
+              autocomplete="current-password"
               required
               disabled={loading}
             />

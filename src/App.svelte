@@ -12,7 +12,7 @@
   import BillingManagement from './lib/components/Billing/BillingManagement.svelte'
   import { currentPath } from './lib/stores/navigation'
   
-  $: isAuthenticated = $auth.user && $auth.profile
+  $: isAuthenticated = $auth.user !== null
   $: currentRoute = $currentPath
 </script>
 

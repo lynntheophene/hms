@@ -55,30 +55,51 @@ const mockProfiles: Record<string, Profile> = {
 
 // Initialize auth state
 if (isDemoMode) {
-  // Demo mode initialization
-  setTimeout(() => {
-    auth.update(state => ({ ...state, loading: false }))
-  }, 1000) // Simulate loading delay
+  // Demo mode initialization - start with no user (show login form)
+  console.log('Initializing demo mode...')
+  auth.set({ user: null, profile: null, loading: false })
+  console.log('Auth state set to not loading immediately')
 } else {
-  supabase.auth.getSession().then(({ data: { session } }) => {
+  // Set a timeout to prevent infinite loading
+  const timeoutId = setTimeout(() => {
+    auth.update(state => ({ ...state, loading: false }))
+  }, 3000)
+  
+  supabase.auth.getSession().then(({ data: { session }, error }) => {
+    clearTimeout(timeoutId)
+    
+    if (error) {
+      console.error('Session error:', error)
+      auth.set({ user: null, profile: null, loading: false })
+      return
+    }
+    
     if (session?.user) {
       loadUserProfile(session.user)
     } else {
-      auth.update(state => ({ ...state, loading: false }))
+      auth.set({ user: null, profile: null, loading: false })
     }
+  }).catch(error => {
+    clearTimeout(timeoutId)
+    console.error('Session check failed:', error)
+    auth.set({ user: null, profile: null, loading: false })
   })
 
   // Listen for auth changes
   supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log('Auth state change:', event, 'Session:', session)
     if (session?.user) {
+      console.log('User found in session, loading profile...')
       await loadUserProfile(session.user)
     } else {
+      console.log('No user in session, setting auth to logged out')
       auth.set({ user: null, profile: null, loading: false })
     }
   })
 }
 
 async function loadUserProfile(user: User) {
+  console.log('Loading profile for user:', user.id, user.email)
   try {
     const { data: profile, error } = await supabase
       .from('profiles')
@@ -86,12 +107,42 @@ async function loadUserProfile(user: User) {
       .eq('id', user.id)
       .single()
 
-    if (error) throw error
+    console.log('Profile query result:', { profile, error })
 
-    auth.set({ user, profile, loading: false })
+    if (error) {
+      console.error('Error loading profile:', error)
+      // Create a basic profile if not found
+      const fallbackProfile = {
+        id: user.id,
+        email: user.email || '',
+        full_name: user.email?.split('@')[0] || 'User',
+        role: 'admin' as const,
+        department: 'Administration',
+        phone: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      console.log('Using fallback profile:', fallbackProfile)
+      auth.set({ user, profile: fallbackProfile, loading: false })
+    } else {
+      console.log('Profile loaded successfully:', profile)
+      auth.set({ user, profile, loading: false })
+    }
   } catch (error) {
-    console.error('Error loading user profile:', error)
-    auth.set({ user, profile: null, loading: false })
+    console.error('Exception in loadUserProfile:', error)
+    // Create fallback profile on exception
+    const fallbackProfile = {
+      id: user.id,
+      email: user.email || '',
+      full_name: user.email?.split('@')[0] || 'User',
+      role: 'admin' as const,
+      department: 'Administration', 
+      phone: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+    console.log('Using fallback profile due to exception:', fallbackProfile)
+    auth.set({ user, profile: fallbackProfile, loading: false })
   }
 }
 

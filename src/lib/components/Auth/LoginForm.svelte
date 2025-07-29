@@ -71,14 +71,25 @@
         <label for="password">Password</label>
         <div class="input-wrapper">
           <Lock class="input-icon" size={20} />
-          <input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            bind:value={password}
-            placeholder="Enter your password"
-            required
-            disabled={loading}
-          />
+          {#if showPassword}
+            <input
+              id="password"
+              type="text"
+              bind:value={password}
+              placeholder="Enter your password"
+              required
+              disabled={loading}
+            />
+          {:else}
+            <input
+              id="password"
+              type="password"
+              bind:value={password}
+              placeholder="Enter your password"
+              required
+              disabled={loading}
+            />
+          {/if}
           <button
             type="button"
             class="password-toggle"

@@ -3,7 +3,6 @@
   import { navigationItems, currentPath, sidebarOpen } from '../../stores/navigation'
   import { ChevronDown, ChevronRight } from 'lucide-svelte'
   import { onMount } from 'svelte'
-  import { page } from '$app/stores'
   
   let expandedItems: Set<string> = new Set()
   

@@ -91,11 +91,7 @@
     z-index: 999;
     transition: left 0.3s ease;
   }
-  
-  :global(.sidebar.collapsed) ~ * .header {
-    left: 70px;
-  }
-  
+
   .header-left {
     display: flex;
     align-items: center;

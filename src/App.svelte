@@ -120,11 +120,7 @@
     margin-left: 280px;
     transition: margin-left 0.3s ease;
   }
-  
-  :global(.sidebar.collapsed) ~ .main-content {
-    margin-left: 70px;
-  }
-  
+
   .content {
     margin-top: 64px;
     min-height: calc(100vh - 64px);

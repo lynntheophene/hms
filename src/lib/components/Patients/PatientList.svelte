@@ -3,6 +3,7 @@
   import { supabase, isDemoMode } from '../../supabase'
   import { Search, Plus, Filter, MoreVertical, Eye, Edit, Trash2 } from 'lucide-svelte'
   import { format } from 'date-fns'
+  import PatientRegistration from './PatientRegistration.svelte'
   
   interface Patient {
     id: string
@@ -21,6 +22,7 @@
   let searchTerm = ''
   let statusFilter = 'all'
   let showActionMenu: string | null = null
+  let showRegistrationModal = false
 
   // Mock data for demo mode
   const mockPatients: Patient[] = [
@@ -161,6 +163,20 @@
       showActionMenu = null
     }
   }
+  
+  function openRegistrationModal() {
+    showRegistrationModal = true
+  }
+  
+  function closeRegistrationModal() {
+    showRegistrationModal = false
+  }
+  
+  function handlePatientRegistered(event: CustomEvent) {
+    // Refresh the patient list
+    loadPatients()
+    showRegistrationModal = false
+  }
 </script>
 
 <svelte:window on:click={handleClickOutside} />
@@ -171,7 +187,7 @@
       <h2>Patient Management</h2>
       <p>Manage patient records and information</p>
     </div>
-    <button class="add-button">
+    <button class="add-button" on:click={openRegistrationModal}>
       <Plus size={20} />
       Add New Patient
     </button>
@@ -302,6 +318,13 @@
     {/if}
   </div>
 </div>
+
+{#if showRegistrationModal}
+  <PatientRegistration 
+    on:close={closeRegistrationModal}
+    on:patientRegistered={handlePatientRegistered}
+  />
+{/if}
 
 <style>
   .patient-list-container {

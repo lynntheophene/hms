@@ -7,6 +7,9 @@
   import PatientList from './lib/components/Patients/PatientList.svelte'
   import EnquiryManagement from './lib/components/Patients/EnquiryManagement.svelte'
   import RoomManagement from './lib/components/Rooms/RoomManagement.svelte'
+  import PharmacyManagement from './lib/components/Pharmacy/PharmacyManagement.svelte'
+  import LaboratoryManagement from './lib/components/Laboratory/LaboratoryManagement.svelte'
+  import BillingManagement from './lib/components/Billing/BillingManagement.svelte'
   import { currentPath } from './lib/stores/navigation'
   
   $: isAuthenticated = $auth.user && $auth.profile
@@ -54,6 +57,18 @@
         {:else if currentRoute.startsWith('/room-management')}
           <div class="page-content">
             <RoomManagement />
+          </div>
+        {:else if currentRoute.startsWith('/pharmacy')}
+          <div class="page-content">
+            <PharmacyManagement />
+          </div>
+        {:else if currentRoute.startsWith('/laboratory')}
+          <div class="page-content">
+            <LaboratoryManagement />
+          </div>
+        {:else if currentRoute.startsWith('/billing')}
+          <div class="page-content">
+            <BillingManagement />
           </div>
         {:else}
           <div class="page-content">

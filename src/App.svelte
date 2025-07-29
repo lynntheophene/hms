@@ -5,6 +5,8 @@
   import Header from './lib/components/Layout/Header.svelte'
   import DashboardStats from './lib/components/Dashboard/DashboardStats.svelte'
   import PatientList from './lib/components/Patients/PatientList.svelte'
+  import EnquiryManagement from './lib/components/Patients/EnquiryManagement.svelte'
+  import RoomManagement from './lib/components/Rooms/RoomManagement.svelte'
   import { currentPath } from './lib/stores/navigation'
   
   $: isAuthenticated = $auth.user && $auth.profile
@@ -43,7 +45,15 @@
           </div>
         {:else if currentRoute.startsWith('/patient-journey')}
           <div class="page-content">
-            <PatientList />
+            {#if currentRoute === '/patient-journey/enquiry'}
+              <EnquiryManagement />
+            {:else}
+              <PatientList />
+            {/if}
+          </div>
+        {:else if currentRoute.startsWith('/room-management')}
+          <div class="page-content">
+            <RoomManagement />
           </div>
         {:else}
           <div class="page-content">

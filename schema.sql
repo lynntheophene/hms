@@ -59,6 +59,11 @@ CREATE TABLE IF NOT EXISTS public.patients (
     blood_group TEXT,
     allergies TEXT,
     medical_history TEXT,
+    insurance_number TEXT,
+    id_number TEXT,
+    nationality TEXT,
+    occupation TEXT,
+    marital_status TEXT CHECK (marital_status IN ('single', 'married', 'divorced', 'widowed')),
     status TEXT DEFAULT 'enquiry' CHECK (status IN ('enquiry', 'registered', 'admitted', 'discharged')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL

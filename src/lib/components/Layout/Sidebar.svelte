@@ -48,7 +48,10 @@
           <button 
             class="nav-link parent"
             class:active={isActive(item.path)}
-            on:click={() => toggleExpanded(item.id)}
+            on:click={() => {
+              currentPath.set(item.path)
+              toggleExpanded(item.id)
+            }}
           >
             <div class="nav-link-content">
               <span class="nav-icon">

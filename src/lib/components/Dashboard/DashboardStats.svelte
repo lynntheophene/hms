@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { supabase } from '../../supabase'
+  import { supabase, isDemoMode } from '../../supabase'
   import { TrendingUp, TrendingDown, Users, Bed, Calendar, Receipt } from 'lucide-svelte'
   
   interface DashboardStats {
@@ -22,6 +22,16 @@
   }
   
   let loading = true
+
+  // Mock stats for demo mode
+  const mockStats: DashboardStats = {
+    totalPatients: 1247,
+    activeAdmissions: 34,
+    todayAppointments: 18,
+    pendingBills: 7,
+    availableRooms: 12,
+    occupancyRate: 75
+  }
   
   onMount(async () => {
     await loadStats()
@@ -29,50 +39,65 @@
   
   async function loadStats() {
     try {
-      // Get total patients
-      const { count: totalPatients } = await supabase
-        .from('patients')
-        .select('*', { count: 'exact', head: true })
-      
-      // Get active admissions
-      const { count: activeAdmissions } = await supabase
-        .from('admissions')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active')
-      
-      // Get today's appointments
-      const today = new Date().toISOString().split('T')[0]
-      const { count: todayAppointments } = await supabase
-        .from('appointments')
-        .select('*', { count: 'exact', head: true })
-        .eq('appointment_date', today)
-        .in('status', ['scheduled', 'confirmed'])
-      
-      // Get pending bills
-      const { count: pendingBills } = await supabase
-        .from('billing')
-        .select('*', { count: 'exact', head: true })
-        .in('payment_status', ['pending', 'partial', 'overdue'])
-      
-      // Get room statistics
-      const { data: rooms } = await supabase
-        .from('rooms')
-        .select('status')
-      
-      const availableRooms = rooms?.filter(room => room.status === 'available').length || 0
-      const totalRooms = rooms?.length || 1
-      const occupancyRate = ((totalRooms - availableRooms) / totalRooms) * 100
-      
-      stats = {
-        totalPatients: totalPatients || 0,
-        activeAdmissions: activeAdmissions || 0,
-        todayAppointments: todayAppointments || 0,
-        pendingBills: pendingBills || 0,
-        availableRooms,
-        occupancyRate: Math.round(occupancyRate)
+      if (isDemoMode) {
+        // Simulate loading delay for demo
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        stats = mockStats
+      } else {
+        // Get total patients
+        const { count: totalPatients } = await supabase
+          .from('patients')
+          .select('*', { count: 'exact', head: true })
+        
+        // Get active admissions
+        const { count: activeAdmissions } = await supabase
+          .from('admissions')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'active')
+        
+        // Get today's appointments
+        const today = new Date().toISOString().split('T')[0]
+        const { count: todayAppointments } = await supabase
+          .from('appointments')
+          .select('*', { count: 'exact', head: true })
+          .eq('appointment_date', today)
+          .in('status', ['scheduled', 'confirmed'])
+        
+        // Get pending bills
+        const { count: pendingBills } = await supabase
+          .from('billing')
+          .select('*', { count: 'exact', head: true })
+          .in('payment_status', ['pending', 'partial', 'overdue'])
+        
+        // Get room statistics
+        const { data: rooms } = await supabase
+          .from('rooms')
+          .select('status')
+        
+        const availableRooms = rooms?.filter(room => room.status === 'available').length || 0
+        const totalRooms = rooms?.length || 1
+        const occupancyRate = ((totalRooms - availableRooms) / totalRooms) * 100
+        
+        stats = {
+          totalPatients: totalPatients || 0,
+          activeAdmissions: activeAdmissions || 0,
+          todayAppointments: todayAppointments || 0,
+          pendingBills: pendingBills || 0,
+          availableRooms,
+          occupancyRate: Math.round(occupancyRate)
+        }
       }
     } catch (error) {
       console.error('Error loading dashboard stats:', error)
+      // Fallback to zero stats
+      stats = {
+        totalPatients: 0,
+        activeAdmissions: 0,
+        todayAppointments: 0,
+        pendingBills: 0,
+        availableRooms: 0,
+        occupancyRate: 0
+      }
     } finally {
       loading = false
     }

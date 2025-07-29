@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { supabase } from '../../supabase'
+  import { supabase, isDemoMode } from '../../supabase'
   import { Search, Plus, Filter, MoreVertical, Eye, Edit, Trash2 } from 'lucide-svelte'
   import { format } from 'date-fns'
   
@@ -21,6 +21,65 @@
   let searchTerm = ''
   let statusFilter = 'all'
   let showActionMenu: string | null = null
+
+  // Mock data for demo mode
+  const mockPatients: Patient[] = [
+    {
+      id: '1',
+      patient_id: 'HMS001',
+      full_name: 'Sarah Johnson',
+      date_of_birth: '1985-03-15',
+      gender: 'female',
+      phone: '+1234567890',
+      email: 'sarah.johnson@email.com',
+      status: 'admitted',
+      created_at: '2024-01-15T10:00:00Z'
+    },
+    {
+      id: '2',
+      patient_id: 'HMS002',
+      full_name: 'Michael Chen',
+      date_of_birth: '1978-07-22',
+      gender: 'male',
+      phone: '+1234567891',
+      email: 'michael.chen@email.com',
+      status: 'registered',
+      created_at: '2024-01-16T14:30:00Z'
+    },
+    {
+      id: '3',
+      patient_id: 'HMS003',
+      full_name: 'Emily Rodriguez',
+      date_of_birth: '1992-11-08',
+      gender: 'female',
+      phone: '+1234567892',
+      email: 'emily.rodriguez@email.com',
+      status: 'enquiry',
+      created_at: '2024-01-17T09:15:00Z'
+    },
+    {
+      id: '4',
+      patient_id: 'HMS004',
+      full_name: 'David Thompson',
+      date_of_birth: '1965-05-30',
+      gender: 'male',
+      phone: '+1234567893',
+      email: null,
+      status: 'discharged',
+      created_at: '2024-01-18T16:45:00Z'
+    },
+    {
+      id: '5',
+      patient_id: 'HMS005',
+      full_name: 'Amanda White',
+      date_of_birth: '1990-09-12',
+      gender: 'female',
+      phone: '+1234567894',
+      email: 'amanda.white@email.com',
+      status: 'admitted',
+      created_at: '2024-01-19T11:20:00Z'
+    }
+  ]
   
   const statusOptions = [
     { value: 'all', label: 'All Patients' },
@@ -46,16 +105,24 @@
   
   async function loadPatients() {
     try {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      if (error) throw error
-      
-      patients = data || []
+      if (isDemoMode) {
+        // Simulate loading delay for demo
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        patients = mockPatients
+      } else {
+        const { data, error } = await supabase
+          .from('patients')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (error) throw error
+        
+        patients = data || []
+      }
     } catch (error) {
       console.error('Error loading patients:', error)
+      // Fallback to empty array on error
+      patients = []
     } finally {
       loading = false
     }
@@ -63,11 +130,11 @@
   
   function getStatusColor(status: string): string {
     switch (status) {
-      case 'enquiry': return 'bg-yellow-100 text-yellow-800'
-      case 'registered': return 'bg-blue-100 text-blue-800'
-      case 'admitted': return 'bg-green-100 text-green-800'
-      case 'discharged': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'enquiry': return 'status-enquiry'
+      case 'registered': return 'status-registered'
+      case 'admitted': return 'status-admitted'
+      case 'discharged': return 'status-discharged'
+      default: return 'status-default'
     }
   }
   
@@ -475,6 +542,31 @@
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: capitalize;
+  }
+
+  .status-enquiry {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .status-registered {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .status-admitted {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .status-discharged {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  .status-default {
+    background: #f3f4f6;
+    color: #374151;
   }
   
   .date {

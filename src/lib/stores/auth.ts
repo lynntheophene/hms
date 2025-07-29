@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store'
-import { supabase } from '../supabase'
+import { supabase, isDemoMode } from '../supabase'
 import type { User } from '@supabase/supabase-js'
 import type { Database } from '../types/database'
 
@@ -19,23 +19,64 @@ const initialState: AuthState = {
 
 export const auth = writable<AuthState>(initialState)
 
-// Initialize auth state
-supabase.auth.getSession().then(({ data: { session } }) => {
-  if (session?.user) {
-    loadUserProfile(session.user)
-  } else {
-    auth.update(state => ({ ...state, loading: false }))
+// Mock profiles for demo mode
+const mockProfiles: Record<string, Profile> = {
+  'admin@hospital.com': {
+    id: 'admin-123',
+    email: 'admin@hospital.com',
+    full_name: 'Dr. Sarah Admin',
+    role: 'admin',
+    department: 'Administration',
+    phone: '+1234567890',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  'doctor@hospital.com': {
+    id: 'doctor-123',
+    email: 'doctor@hospital.com',
+    full_name: 'Dr. John Smith',
+    role: 'doctor',
+    department: 'Cardiology',
+    phone: '+1234567891',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  'nurse@hospital.com': {
+    id: 'nurse-123',
+    email: 'nurse@hospital.com',
+    full_name: 'Jane Wilson',
+    role: 'nurse',
+    department: 'ICU',
+    phone: '+1234567892',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   }
-})
+}
 
-// Listen for auth changes
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (session?.user) {
-    await loadUserProfile(session.user)
-  } else {
-    auth.set({ user: null, profile: null, loading: false })
-  }
-})
+// Initialize auth state
+if (isDemoMode) {
+  // Demo mode initialization
+  setTimeout(() => {
+    auth.update(state => ({ ...state, loading: false }))
+  }, 1000) // Simulate loading delay
+} else {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session?.user) {
+      loadUserProfile(session.user)
+    } else {
+      auth.update(state => ({ ...state, loading: false }))
+    }
+  })
+
+  // Listen for auth changes
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (session?.user) {
+      await loadUserProfile(session.user)
+    } else {
+      auth.set({ user: null, profile: null, loading: false })
+    }
+  })
+}
 
 async function loadUserProfile(user: User) {
   try {
@@ -55,6 +96,23 @@ async function loadUserProfile(user: User) {
 }
 
 export const signIn = async (email: string, password: string) => {
+  if (isDemoMode) {
+    // Mock authentication for demo
+    const profile = mockProfiles[email.toLowerCase()]
+    if (profile && password.endsWith('123')) {
+      const mockUser = {
+        id: profile.id,
+        email: profile.email,
+        created_at: profile.created_at
+      } as User
+      
+      auth.set({ user: mockUser, profile, loading: false })
+      return { data: { user: mockUser, session: null }, error: null }
+    } else {
+      return { data: null, error: { message: 'Invalid credentials' } }
+    }
+  }
+  
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
@@ -63,6 +121,11 @@ export const signIn = async (email: string, password: string) => {
 }
 
 export const signOut = async () => {
+  if (isDemoMode) {
+    auth.set({ user: null, profile: null, loading: false })
+    return { error: null }
+  }
+  
   const { error } = await supabase.auth.signOut()
   return { error }
 }
@@ -73,6 +136,10 @@ export const signUp = async (email: string, password: string, userData: {
   department?: string
   phone?: string
 }) => {
+  if (isDemoMode) {
+    return { data: null, error: { message: 'Sign up not available in demo mode' } }
+  }
+  
   const { data, error } = await supabase.auth.signUp({
     email,
     password,

@@ -127,5 +127,10 @@ export const navigationItems: NavigationItem[] = [
   }
 ]
 
-export const currentPath = writable<string>('/')
+export const currentPath = writable<string>('/dashboard')
 export const sidebarOpen = writable<boolean>(true)
+
+// Initialize currentPath based on browser URL
+if (typeof window !== 'undefined') {
+  currentPath.set(window.location.pathname || '/dashboard')
+}

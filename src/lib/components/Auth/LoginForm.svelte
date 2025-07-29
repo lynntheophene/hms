@@ -55,7 +55,9 @@
       <div class="form-group">
         <label for="email">Email Address</label>
         <div class="input-wrapper">
-          <Mail class="input-icon" size={20} />
+          <span class="input-icon">
+            <Mail size={20} />
+          </span>
           <input
             id="email"
             type="email"
@@ -70,7 +72,9 @@
       <div class="form-group">
         <label for="password">Password</label>
         <div class="input-wrapper">
-          <Lock class="input-icon" size={20} />
+          <span class="input-icon">
+            <Lock size={20} />
+          </span>
           {#if showPassword}
             <input
               id="password"

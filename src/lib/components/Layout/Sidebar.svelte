@@ -83,8 +83,7 @@
             <div class="nav-children">
               {#each item.children as child}
                 {#if userRole && child.roles.includes(userRole)}
-                  <a 
-                    href={child.path}
+                  <button 
                     class="nav-link child"
                     class:active={isActive(child.path)}
                     on:click={() => currentPath.set(child.path)}
@@ -115,14 +114,13 @@
                       {:else}📋{/if}
                     </span>
                     <span class="nav-text">{child.label}</span>
-                  </a>
+                  </button>
                 {/if}
               {/each}
             </div>
           {/if}
         {:else}
-          <a 
-            href={item.path}
+          <button 
             class="nav-link"
             class:active={isActive(item.path)}
             on:click={() => currentPath.set(item.path)}
@@ -145,7 +143,7 @@
                 <span class="nav-text">{item.label}</span>
               {/if}
             </div>
-          </a>
+          </button>
         {/if}
       </div>
     {/each}

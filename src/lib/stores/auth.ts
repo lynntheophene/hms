@@ -59,10 +59,11 @@ if (isDemoMode) {
   auth.set({ user: null, profile: null, loading: false })
 } else {
   // Production mode with Supabase
-  // Set a timeout to prevent infinite loading
+  // Set a longer timeout to prevent premature loading state end
   const timeoutId = setTimeout(() => {
+    console.warn('Session check timed out, ending loading state')
     auth.update(state => ({ ...state, loading: false }))
-  }, 5000)
+  }, 10000)
   
   supabase.auth.getSession().then(({ data: { session }, error }) => {
     clearTimeout(timeoutId)
@@ -86,6 +87,8 @@ if (isDemoMode) {
 
   // Listen for auth changes
   supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log('Auth state changed:', event)
+    
     if (session?.user) {
       await loadUserProfile(session.user)
     } else {
@@ -94,9 +97,14 @@ if (isDemoMode) {
   })
 }
 
-async function loadUserProfile(user: User) {
+async function loadUserProfile(user: User, retryCount = 0) {
+  const maxRetries = 2
+  
   try {
-    // Query user profile with timeout
+    // Set loading state with user info
+    auth.set({ user, profile: null, loading: true })
+    
+    // Query user profile with extended timeout
     const queryPromise = supabase
       .from('profiles')
       .select('*')
@@ -104,7 +112,7 @@ async function loadUserProfile(user: User) {
       .single()
     
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Profile query timeout')), 5000)
+      setTimeout(() => reject(new Error('Profile query timeout')), 8000)
     )
     
     const result = await Promise.race([queryPromise, timeoutPromise]) as any
@@ -112,6 +120,13 @@ async function loadUserProfile(user: User) {
 
     if (error) {
       console.error('Error loading profile:', error)
+      
+      // Check if this is a network/timeout error and we can retry
+      if ((error.message?.includes('timeout') || error.message?.includes('network') || error.code === 'PGRST301') && retryCount < maxRetries) {
+        console.log(`Retrying profile load (attempt ${retryCount + 1}/${maxRetries + 1})...`)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))) // Progressive delay
+        return loadUserProfile(user, retryCount + 1)
+      }
       
       if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
         console.warn('Profile not found for user:', user.email)
@@ -125,7 +140,15 @@ async function loadUserProfile(user: User) {
     }
   } catch (error) {
     console.error('Profile loading failed:', error)
-    // Set user without profile on exception
+    
+    // Retry on network errors
+    if ((error instanceof Error && (error.message.includes('timeout') || error.message.includes('network'))) && retryCount < maxRetries) {
+      console.log(`Retrying profile load after exception (attempt ${retryCount + 1}/${maxRetries + 1})...`)
+      await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)))
+      return loadUserProfile(user, retryCount + 1)
+    }
+    
+    // Set user without profile on final failure
     auth.set({ user, profile: null, loading: false })
   }
 }
@@ -218,5 +241,18 @@ export const forceSignOut = async () => {
     auth.set({ user: null, profile: null, loading: false })
   } catch (error) {
     console.error('Force sign out failed:', error)
+  }
+}
+
+// Retry profile loading - useful when profile fails to load
+export const retryProfileLoad = async () => {
+  const currentState = auth
+  let state: AuthState
+  const unsubscribe = currentState.subscribe(s => state = s)
+  unsubscribe()
+  
+  if (state.user && !state.profile && !state.loading) {
+    console.log('Retrying profile load for user:', state.user.email)
+    await loadUserProfile(state.user)
   }
 }

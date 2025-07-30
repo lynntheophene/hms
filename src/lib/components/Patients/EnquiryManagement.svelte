@@ -3,6 +3,7 @@
   import { supabase, isDemoMode } from '../../supabase'
   import { Search, Plus, Phone, Mail, Calendar, User, Clock, Filter, MoreVertical, Check, X } from 'lucide-svelte'
   import { format } from 'date-fns'
+  import NewEnquiryModal from './NewEnquiryModal.svelte'
   
   interface Enquiry {
     id: string
@@ -187,6 +188,13 @@
       console.error('Error updating enquiry status:', error)
     }
   }
+  
+  function handleNewEnquiry(event: CustomEvent) {
+    const newEnquiry = event.detail
+    // Add the new enquiry to the beginning of the list
+    enquiries = [{ ...newEnquiry, id: newEnquiry.enquiry_id }, ...enquiries]
+    showNewEnquiryModal = false
+  }
 </script>
 
 <svelte:window on:click={handleClickOutside} />
@@ -356,6 +364,12 @@
     {/if}
   </div>
 </div>
+
+<NewEnquiryModal 
+  bind:show={showNewEnquiryModal} 
+  on:enquiry-added={handleNewEnquiry}
+  on:close={() => showNewEnquiryModal = false}
+/>
 
 <style>
   .enquiry-container {

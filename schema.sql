@@ -313,57 +313,75 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create triggers to automatically update timestamps
+
+DROP TRIGGER IF EXISTS set_timestamp_profiles ON public.profiles;
 CREATE TRIGGER set_timestamp_profiles
     BEFORE UPDATE ON public.profiles
     FOR EACH ROW
     EXECUTE PROCEDURE trigger_set_timestamp();
 
+
+DROP TRIGGER IF EXISTS set_timestamp_patients ON public.patients;
 CREATE TRIGGER set_timestamp_patients
     BEFORE UPDATE ON public.patients
     FOR EACH ROW
     EXECUTE PROCEDURE trigger_set_timestamp();
 
+
+DROP TRIGGER IF EXISTS set_timestamp_rooms ON public.rooms;
 CREATE TRIGGER set_timestamp_rooms
     BEFORE UPDATE ON public.rooms
     FOR EACH ROW
     EXECUTE PROCEDURE trigger_set_timestamp();
 
+
+DROP TRIGGER IF EXISTS set_timestamp_appointments ON public.appointments;
 CREATE TRIGGER set_timestamp_appointments
     BEFORE UPDATE ON public.appointments
     FOR EACH ROW
     EXECUTE PROCEDURE trigger_set_timestamp();
 
+
+DROP TRIGGER IF EXISTS set_timestamp_admissions ON public.admissions;
 CREATE TRIGGER set_timestamp_admissions
     BEFORE UPDATE ON public.admissions
     FOR EACH ROW
     EXECUTE PROCEDURE trigger_set_timestamp();
 
+
+DROP TRIGGER IF EXISTS set_timestamp_billing ON public.billing;
 CREATE TRIGGER set_timestamp_billing
     BEFORE UPDATE ON public.billing
     FOR EACH ROW
     EXECUTE PROCEDURE trigger_set_timestamp();
 
+
 -- New triggers for additional tables
+DROP TRIGGER IF EXISTS set_timestamp_bills ON public.bills;
 CREATE TRIGGER set_timestamp_bills
     BEFORE UPDATE ON public.bills
     FOR EACH ROW
     EXECUTE PROCEDURE trigger_set_timestamp();
 
+DROP TRIGGER IF EXISTS set_timestamp_medicines ON public.medicines;
 CREATE TRIGGER set_timestamp_medicines
     BEFORE UPDATE ON public.medicines
     FOR EACH ROW
     EXECUTE PROCEDURE trigger_set_timestamp();
 
+DROP TRIGGER IF EXISTS set_timestamp_lab_tests ON public.lab_tests;
 CREATE TRIGGER set_timestamp_lab_tests
     BEFORE UPDATE ON public.lab_tests
     FOR EACH ROW
     EXECUTE PROCEDURE trigger_set_timestamp();
 
+DROP TRIGGER IF EXISTS set_timestamp_test_templates ON public.test_templates;
 CREATE TRIGGER set_timestamp_test_templates
     BEFORE UPDATE ON public.test_templates
     FOR EACH ROW
     EXECUTE PROCEDURE trigger_set_timestamp();
 
+DROP TRIGGER IF EXISTS set_timestamp_enquiries ON public.enquiries;
 CREATE TRIGGER set_timestamp_enquiries
     BEFORE UPDATE ON public.enquiries
     FOR EACH ROW
@@ -389,14 +407,19 @@ ALTER TABLE public.test_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.enquiries ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies (basic examples - customize based on your requirements)
+
 -- Profiles policy - users can read their own profile
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
 CREATE POLICY "Users can view own profile" ON public.profiles
     FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles
     FOR UPDATE USING (auth.uid() = id);
 
 -- Patients policy - staff can view all patients
+
+DROP POLICY IF EXISTS "Staff can view all patients" ON public.patients;
 CREATE POLICY "Staff can view all patients" ON public.patients
     FOR SELECT TO authenticated
     USING (
@@ -408,6 +431,8 @@ CREATE POLICY "Staff can view all patients" ON public.patients
     );
 
 -- Appointments policy
+
+DROP POLICY IF EXISTS "Staff can view appointments" ON public.appointments;
 CREATE POLICY "Staff can view appointments" ON public.appointments
     FOR SELECT TO authenticated
     USING (
@@ -421,6 +446,8 @@ CREATE POLICY "Staff can view appointments" ON public.appointments
 -- Similar policies can be created for other tables based on role requirements
 
 -- Policies for new tables
+
+DROP POLICY IF EXISTS "Staff can view bills" ON public.bills;
 CREATE POLICY "Staff can view bills" ON public.bills
     FOR SELECT TO authenticated
     USING (
@@ -431,6 +458,8 @@ CREATE POLICY "Staff can view bills" ON public.bills
         )
     );
 
+
+DROP POLICY IF EXISTS "Staff can view medicines" ON public.medicines;
 CREATE POLICY "Staff can view medicines" ON public.medicines
     FOR SELECT TO authenticated
     USING (
@@ -441,6 +470,8 @@ CREATE POLICY "Staff can view medicines" ON public.medicines
         )
     );
 
+
+DROP POLICY IF EXISTS "Staff can view lab tests" ON public.lab_tests;
 CREATE POLICY "Staff can view lab tests" ON public.lab_tests
     FOR SELECT TO authenticated
     USING (
@@ -451,6 +482,8 @@ CREATE POLICY "Staff can view lab tests" ON public.lab_tests
         )
     );
 
+
+DROP POLICY IF EXISTS "Staff can view enquiries" ON public.enquiries;
 CREATE POLICY "Staff can view enquiries" ON public.enquiries
     FOR SELECT TO authenticated
     USING (
@@ -461,7 +494,6 @@ CREATE POLICY "Staff can view enquiries" ON public.enquiries
         )
     );
 
--- Create function to handle new user signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -471,7 +503,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create trigger for new user signup
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();

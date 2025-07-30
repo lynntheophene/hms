@@ -44,35 +44,72 @@
         await new Promise(resolve => setTimeout(resolve, 2000))
         stats = mockStats
       } else {
+        console.log('Loading dashboard stats from Supabase...')
+        
         // Get total patients
-        const { count: totalPatients } = await supabase
+        console.log('Fetching patients count...')
+        const { count: totalPatients, error: patientsError } = await supabase
           .from('patients')
           .select('*', { count: 'exact', head: true })
         
+        if (patientsError) {
+          console.error('Patients query error:', patientsError)
+        } else {
+          console.log('Patients count:', totalPatients)
+        }
+        
         // Get active admissions
-        const { count: activeAdmissions } = await supabase
+        console.log('Fetching admissions count...')
+        const { count: activeAdmissions, error: admissionsError } = await supabase
           .from('admissions')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'active')
         
+        if (admissionsError) {
+          console.error('Admissions query error:', admissionsError)
+        } else {
+          console.log('Active admissions count:', activeAdmissions)
+        }
+        
         // Get today's appointments
         const today = new Date().toISOString().split('T')[0]
-        const { count: todayAppointments } = await supabase
+        console.log('Fetching appointments for date:', today)
+        const { count: todayAppointments, error: appointmentsError } = await supabase
           .from('appointments')
           .select('*', { count: 'exact', head: true })
           .eq('appointment_date', today)
           .in('status', ['scheduled', 'confirmed'])
         
+        if (appointmentsError) {
+          console.error('Appointments query error:', appointmentsError)
+        } else {
+          console.log('Today appointments count:', todayAppointments)
+        }
+        
         // Get pending bills
-        const { count: pendingBills } = await supabase
+        console.log('Fetching billing count...')
+        const { count: pendingBills, error: billingError } = await supabase
           .from('billing')
           .select('*', { count: 'exact', head: true })
           .in('payment_status', ['pending', 'partial', 'overdue'])
         
+        if (billingError) {
+          console.error('Billing query error:', billingError)
+        } else {
+          console.log('Pending bills count:', pendingBills)
+        }
+        
         // Get room statistics
-        const { data: rooms } = await supabase
+        console.log('Fetching rooms data...')
+        const { data: rooms, error: roomsError } = await supabase
           .from('rooms')
           .select('status')
+        
+        if (roomsError) {
+          console.error('Rooms query error:', roomsError)
+        } else {
+          console.log('Rooms data:', rooms)
+        }
         
         const availableRooms = rooms?.filter(room => room.status === 'available').length || 0
         const totalRooms = rooms?.length || 1
@@ -86,9 +123,12 @@
           availableRooms,
           occupancyRate: Math.round(occupancyRate)
         }
+        
+        console.log('Final stats:', stats)
       }
     } catch (error) {
       console.error('Error loading dashboard stats:', error)
+      console.error('Error details:', error.message, error.details, error.hint)
       // Fallback to zero stats
       stats = {
         totalPatients: 0,

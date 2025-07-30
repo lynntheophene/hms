@@ -19,7 +19,7 @@
     allergies: string
     medical_history: string
     insurance_number: string
-    id_number: string
+    // id_number: string // Removed for patient registration
     nationality: string
     occupation: string
     marital_status: string
@@ -39,7 +39,7 @@
     allergies: '',
     medical_history: '',
     insurance_number: '',
-    id_number: '',
+    // id_number: '',
     nationality: '',
     occupation: '',
     marital_status: ''
@@ -127,7 +127,7 @@
             allergies: formData.allergies || null,
             medical_history: formData.medical_history || null,
             insurance_number: formData.insurance_number || null,
-            id_number: formData.id_number || null,
+            // id_number: formData.id_number || null,
             nationality: formData.nationality || null,
             occupation: formData.occupation || null,
             marital_status: formData.marital_status || null,
@@ -376,14 +376,7 @@
             />
           </div>
           
-          <div class="form-group">
-            <label for="id_number">ID Number</label>
-            <input
-              type="text"
-              id="id_number"
-              bind:value={formData.id_number}
-            />
-          </div>
+          <!-- ID Number field removed: use patient_id for patient registration -->
           
           <div class="form-group">
             <label for="insurance_number">Insurance Number</label>

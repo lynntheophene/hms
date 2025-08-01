@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { supabase, isDemoMode } from '../../supabase'
-  import { Search, Plus, Phone, Mail, Calendar, User, Clock, Filter, MoreVertical, Check, X } from 'lucide-svelte'
+  import { Search, Plus, Phone, Mail, Calendar, User, Clock, Filter, Menu, Check, X } from 'lucide-svelte'
   import { format } from 'date-fns'
   import NewEnquiryModal from './NewEnquiryModal.svelte'
   import PatientRegistrationModal from './PatientRegistrationModal.svelte'
@@ -289,14 +289,13 @@
                   {enquiryTypes.find(t => t.value === enquiry.enquiry_type)?.label || enquiry.enquiry_type}
                 </span>
               </div>
-              <div class="action-menu-container" style="display:flex; align-items:center;">
+              <div class="action-menu-container">
                 <button 
                   class="action-button"
                   aria-label="Actions"
-                  style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#e0e7ff; border:2px solid #3b82f6; color:#374151; cursor:pointer; border-radius:8px;"
                   on:click={() => toggleActionMenu(enquiry.id)}
                 >
-                  <MoreVertical size={20} />
+                  <span class="three-dots">⋮</span>
                 </button>
                 {#if showActionMenu === enquiry.id}
                   <div class="action-menu">
@@ -644,6 +643,12 @@
   .action-button:hover {
     background: #f3f4f6;
     color: #374151;
+  }
+  
+  .three-dots {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1;
   }
   
   .action-menu {

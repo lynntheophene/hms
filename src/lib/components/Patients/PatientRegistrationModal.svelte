@@ -27,7 +27,7 @@ async function markAsCompleted() {
 {#if open}
   <div class="modal-backdrop" role="presentation" tabindex="0" on:click={onClose}></div>
   <div class="modal-wrapper">
-    <PatientRegistration enquiryData={enquiryData} on:registered={handleRegistered} />
+    <PatientRegistration on:registered={handleRegistered} />
     {#if (userRole === 'doctor' || userRole === 'nurse' || userRole === 'admin') && enquiryData}
       <button class="complete-btn" on:click={markAsCompleted} style="margin-top:1rem;">Mark as Completed</button>
     {/if}

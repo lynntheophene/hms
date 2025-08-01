@@ -4,6 +4,7 @@
   import { Search, Plus, Phone, Mail, Calendar, User, Clock, Filter, MoreVertical, Check, X } from 'lucide-svelte'
   import { format } from 'date-fns'
   import NewEnquiryModal from './NewEnquiryModal.svelte'
+  import PatientRegistrationModal from './PatientRegistrationModal.svelte'
   
   interface Enquiry {
     id: string
@@ -16,7 +17,7 @@
     preferred_date?: string
     preferred_time?: string
     message: string
-    status: 'pending' | 'contacted' | 'scheduled' | 'converted' | 'cancelled'
+    status: 'pending' | 'contacted' | 'scheduled' | 'converted' | 'cancelled' | 'completed'
     assigned_to?: string
     created_at: string
     updated_at: string
@@ -29,6 +30,10 @@
   let departmentFilter = 'all'
   let showNewEnquiryModal = false
   let showActionMenu: string | null = null
+  let showCompleteModal = false
+  let selectedEnquiry: Enquiry | null = null
+  // TODO: Replace with actual user role from auth store or prop
+  let userRole = 'admin';
   
   // Mock data for demo mode
   const mockEnquiries: Enquiry[] = [
@@ -95,7 +100,8 @@
     { value: 'contacted', label: 'Contacted' },
     { value: 'scheduled', label: 'Scheduled' },
     { value: 'converted', label: 'Converted' },
-    { value: 'cancelled', label: 'Cancelled' }
+    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'completed', label: 'Completed' }
   ]
   
   $: filteredEnquiries = enquiries.filter(enquiry => {
@@ -142,6 +148,7 @@
       case 'scheduled': return 'status-scheduled'
       case 'converted': return 'status-converted'
       case 'cancelled': return 'status-cancelled'
+      case 'completed': return 'status-completed'
       default: return 'status-default'
     }
   }
@@ -191,9 +198,20 @@
   
   function handleNewEnquiry(event: CustomEvent) {
     const newEnquiry = event.detail
-    // Add the new enquiry to the beginning of the list
     enquiries = [{ ...newEnquiry, id: newEnquiry.enquiry_id }, ...enquiries]
     showNewEnquiryModal = false
+  }
+
+  function openCompleteModal(enquiry: Enquiry) {
+    selectedEnquiry = enquiry;
+    showCompleteModal = true;
+    showActionMenu = null;
+  }
+
+  function handleCloseCompleteModal() {
+    showCompleteModal = false;
+    selectedEnquiry = null;
+    loadEnquiries();
   }
 </script>
 
@@ -271,14 +289,15 @@
                   {enquiryTypes.find(t => t.value === enquiry.enquiry_type)?.label || enquiry.enquiry_type}
                 </span>
               </div>
-              <div class="action-menu-container">
+              <div class="action-menu-container" style="display:flex; align-items:center;">
                 <button 
                   class="action-button"
+                  aria-label="Actions"
+                  style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#e0e7ff; border:2px solid #3b82f6; color:#374151; cursor:pointer; border-radius:8px;"
                   on:click={() => toggleActionMenu(enquiry.id)}
                 >
-                  <MoreVertical size={16} />
+                  <MoreVertical size={20} />
                 </button>
-                
                 {#if showActionMenu === enquiry.id}
                   <div class="action-menu">
                     <button class="menu-item" on:click={() => updateEnquiryStatus(enquiry.id, 'contacted')}>
@@ -298,6 +317,12 @@
                       <X size={16} />
                       Cancel Enquiry
                     </button>
+                    {#if (userRole === 'doctor' || userRole === 'nurse' || userRole === 'admin')}
+                      <button class="menu-item" on:click={() => openCompleteModal(enquiry)}>
+                        <Check size={16} />
+                        Mark as Completed
+                      </button>
+                    {/if}
                   </div>
                 {/if}
               </div>
@@ -369,6 +394,13 @@
   bind:show={showNewEnquiryModal} 
   on:enquiry-added={handleNewEnquiry}
   on:close={() => showNewEnquiryModal = false}
+/>
+
+<PatientRegistrationModal
+  enquiryData={selectedEnquiry}
+  open={showCompleteModal}
+  userRole={userRole}
+  on:close={handleCloseCompleteModal}
 />
 
 <style>
@@ -760,6 +792,11 @@
   .status-cancelled {
     background: #fee2e2;
     color: #991b1b;
+  }
+  
+  .status-completed {
+    background: #e0ffe0;
+    color: #388e3c;
   }
   
   .status-default {

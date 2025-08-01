@@ -1,21 +1,36 @@
 <script lang="ts">
 import PatientRegistration from './PatientRegistration.svelte';
-export let enquiryData = null;
+export let enquiryData: Record<string, any> | null = null;
 export let open = false;
 export let onClose = () => {};
+export let userRole = '';
+import { supabase } from '../../supabase';
 import { createEventDispatcher } from 'svelte';
 const dispatch = createEventDispatcher();
 
-function handleRegistered(e) {
+function handleRegistered(e: any) {
+  dispatch('close');
+  onClose();
+}
+
+async function markAsCompleted() {
+  if (!enquiryData || !enquiryData.id) return;
+  await supabase
+    .from('enquiries')
+    .update({ status: 'completed' })
+    .eq('id', enquiryData.id);
   dispatch('close');
   onClose();
 }
 </script>
 
 {#if open}
-  <div class="modal-backdrop" on:click={onClose}></div>
+  <div class="modal-backdrop" role="presentation" tabindex="0" on:click={onClose}></div>
   <div class="modal-wrapper">
-    <PatientRegistration {enquiryData} on:registered={handleRegistered} />
+    <PatientRegistration enquiryData={enquiryData} on:registered={handleRegistered} />
+    {#if (userRole === 'doctor' || userRole === 'nurse' || userRole === 'admin') && enquiryData}
+      <button class="complete-btn" on:click={markAsCompleted} style="margin-top:1rem;">Mark as Completed</button>
+    {/if}
   </div>
 {/if}
 
@@ -38,5 +53,20 @@ function handleRegistered(e) {
   max-width: 90vw;
   max-height: 90vh;
   overflow: auto;
+}
+.complete-btn {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  background: #2e7d32;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.complete-btn:hover {
+  background: #1b5e20;
 }
 </style>
